@@ -6,33 +6,46 @@
 # See the solution video in the 100 Days of Python Course for explainations.
 
 
-from datetime import datetime
-import pandas
+import pandas as pd
+import datetime as dt
 import random
 import smtplib
 import os
 
-# import os and use it to get the Github repository secrets
-MY_EMAIL = os.environ.get("MY_EMAIL")
-MY_PASSWORD = os.environ.get("MY_PASSWORD")
+my_email = os.environ.get("MY_EMAIL")
+password = os.environ.get("MY_PASSWORD")
 
-today = datetime.now()
-today_tuple = (today.month, today.day)
+data = pd.read_csv("birthdays.csv")
+month = data["month"].head()
+day = data["day"].head()
 
-data = pandas.read_csv("birthdays.csv")
-birthdays_dict = {(data_row["month"], data_row["day"])                  : data_row for (index, data_row) in data.iterrows()}
-if today_tuple in birthdays_dict:
-    birthday_person = birthdays_dict[today_tuple]
-    file_path = f"letter_templates/letter_{random.randint(1, 3)}.txt"
-    with open(file_path) as letter_file:
-        contents = letter_file.read()
-        contents = contents.replace("[NAME]", birthday_person["name"])
 
-    with smtplib.SMTP("YOUR EMAIL PROVIDER SMTP SERVER ADDRESS") as connection:
-        connection.starttls()
-        connection.login(MY_EMAIL, MY_PASSWORD)
-        connection.sendmail(
-            from_addr=MY_EMAIL,
+now = dt.datetime.now()
+today_day = now.day
+today_month = now.month
+
+
+for index, row in data.iterrows():
+    if row["month"] == today_month and row["day"] == today_day:
+        
+
+        random_letter_file = f"letter_templates/letter_{random.randint(1, 3)}.txt"
+
+        with open(random_letter_file, "r") as letter_file:
+            letter_contents = letter_file.read()
+            personalized_letter = letter_contents.replace("[NAME]", row["name"])
+
+        
+
+
+        with smtplib.SMTP("smtp.gmail.com",587) as connection :
+            connection.starttls()
+            connection.login(user=my_email , password=password)
+            connection.sendmail(from_addr=my_email , to_addrs= row["email"] , msg=f"Subject:Happy Birthday!\n\n{personalized_letter}")
+
+        print(f"Birthday email successfully sent to {row['name']}!")
+
+
             to_addrs=birthday_person["email"],
             msg=f"Subject:Happy Birthday!\n\n{contents}"
         )
